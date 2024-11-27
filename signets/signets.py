@@ -43,7 +43,7 @@ class Signets(IObserver):
         reponse = self.f(msg,to,attachments)
         if reponse == None:
             reponse = "Une erreur s'est produite lors de l'interrogation du LLM"
-        await self.__observable.notify("Coco a dit : "+reponse, to, attachments)
+        await self.__observable.notify("Signet : "+reponse+" sauvé", to, attachments)
 
     def prefix(self):
         return "!f"
