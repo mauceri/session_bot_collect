@@ -11,17 +11,17 @@ class milvus_handler:
         print(f"Aqui")
         self.model_name = model_name
 
-    def connect(self,host="localhost",port="19530"):
+    def connect(self,alias="default",host="localhost",port="19530"):
         print(f"connection to Milvus server")
         connections.connect(
-            alias="default",
+            alias=alias,
             host=host,  # ou l'adresse IP du serveur Milvus
             port=port       # le port exposé dans votre fichier docker-compose.yml
         )
         
     def disconnect(self,alias="default",host="localhost",port="19530"):
         print(f"disconnection from Milvus server")
-        connections.disconnect()
+        connections.disconnect(alias)
     
     
     def create_collection(self,collection_name, dim=768):
@@ -77,9 +77,7 @@ class milvus_handler:
         print(f"Texte inséré avec succès avec l'ID : {insert_result.primary_keys}")
 
     def search(self,query,collection_name='text_embeddings_collection'):
-        # Connexion au serveur Milvus
-        connections.connect(alias="default", host="localhost", port="19530")
-
+ 
         # Charger la collection existante 
         if not utility.has_collection(collection_name):
             raise ValueError(f"La collection '{collection_name}' n'existe pas.")
