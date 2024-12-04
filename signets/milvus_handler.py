@@ -18,6 +18,11 @@ class milvus_handler:
             host=host,  # ou l'adresse IP du serveur Milvus
             port=port       # le port exposé dans votre fichier docker-compose.yml
         )
+        
+    def disconnect(self,alias="default",host="localhost",port="19530"):
+        print(f"disconnection from Milvus server")
+        connections.disconnect()
+    
     
     def create_collection(self,collection_name, dim=768):
         print(f"*************** dim = {dim}")
