@@ -11,8 +11,8 @@ class milvus_handler:
         print(f"Aqui")
         self.model_name = model_name
 
-    def connect(self,alias="default",host="localhost",port="19530"):
-        print(f"connection to Milvus server")
+    def connect(self,alias="default",host="localhost",port="19530",user="toto",password="toto"):
+        print(f"connection to Milvus server {user}")
         connections.connect(
             alias=alias,
             host=host,  # ou l'adresse IP du serveur Milvus
