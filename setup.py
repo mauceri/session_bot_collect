@@ -30,6 +30,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests>=2.31.0",
+        "towhee>=1.1.3",
+        "pymilvu>=2.5.0",
+        "numpy>=2.1.1",
      ],
     classifiers=[
         "Programming Language :: Python :: 3",
