@@ -32,7 +32,7 @@ setup(
         "requests>=2.31.0",
         "towhee>=1.1.3",
         "pymilvus>=2.5.0",
-        "numpy>=2.1.1",
+        "numpy>=2.0.0",
      ],
     classifiers=[
         "Programming Language :: Python :: 3",
