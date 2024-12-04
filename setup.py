@@ -29,10 +29,10 @@ setup(
     description="Un robot qui vous veut du bien",
     packages=find_packages(),
     install_requires=[
-        "requests>=2.31.0",
+        "requests>=2.32.0",
         "towhee>=1.1.3",
         "pymilvus>=2.5.0",
-        "numpy>=2.0.0",
+        "numpy>=2.1.1",
      ],
     classifiers=[
         "Programming Language :: Python :: 3",
