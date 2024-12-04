@@ -4,7 +4,7 @@ import time
 from .interfaces import IObserver, IObservable, IPlugin
 #from sqlite_handler import SQLiteHandler
 #from interrogationLocale import InterrogationLocale
-from signets.signets import milvus_handler
+from signets import milvus_handler
 
 
 logger = logging.getLogger(__name__)
