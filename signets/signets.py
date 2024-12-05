@@ -42,6 +42,8 @@ class Signets(IObserver):
         try:
             stime = time.time()
             m = tmh.text_milvus_handler()
+            m.disconnect()
+            m.connect(host="sanroque")
             r = m.process_session_message(question,utilisateur,attachments)
             if r :
                 reponse = "utilisateur OK"
