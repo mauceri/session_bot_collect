@@ -46,9 +46,9 @@ class Signets(IObserver):
             m.connect(host="sanroque")
             r = m.process_session_message(question,utilisateur,attachments)
             if r :
-                reponse = "{utilisateur} OK"
+                reponse = f"{utilisateur} OK"
             else:
-                reponse = "{utilisateur} inconnu"
+                reponse = f"{utilisateur} inconnu"
  
         except BaseException as e:
             print(f"Quelque chose n'a pas fonctionné {e}")
