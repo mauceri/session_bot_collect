@@ -44,14 +44,14 @@ class Signets(IObserver):
             m = tmh.text_milvus_handler()
             m.disconnect()
             m.connect(host="sanroque")
-            r = m.process_session_message(question,utilisateur,attachments)
-            if r :
+            #r = m.process_session_message(question,utilisateur,attachments)
+            if m.session_id_ok(utilisateur) :
                 reponse = f"{utilisateur} OK"
             else:
                 reponse = f"{utilisateur} inconnu"
  
         except BaseException as e:
-            print(f"Quelque chose n'a pas fonctionné {e}")
+            logger.error(f"Quelque chose n'a pas fonctionné {e}")
             reponse = None
         reponset = f"{time.time()-stime} {reponse}"
         return reponset
