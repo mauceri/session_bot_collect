@@ -36,17 +36,40 @@ class Signets(IObserver):
         logger.info(f"********************** Répertoire de données du plugin : {self.data_dir}")
  
 
-    def f(self,question:str,utilisateur:str,attachments):
-        print(f"Question de {utilisateur} : {question}")            
+    def quoi_faire(self,message, utilisateur):
+        if message.startswith("s "):
+            return m.search_text(message.replace("s ",message),utilisateur)
+        else:
+            if message != "":
+                try:
+                    m.insert_text(message,utilisateur)
+                    return f"{message[:10]}... sauvé"
+                except:
+                    return f"{message[:10]}... n'a pas été sauvé"
+            else:
+                return "message vide"
+        
+    def f(self,message:str,utilisateur:str,attachments):
+        logger.info(f"Message de {utilisateur} : {message}")            
         reponse = ""
         try:
             stime = time.time()
             m = tmh.text_milvus_handler()
             m.disconnect()
             m.connect(host="sanroque")
-            #r = m.process_session_message(question,utilisateur,attachments)
+            
             if m.session_id_ok(utilisateur) :
-                reponse = f"{utilisateur} OK"
+                if message.startswith("s "):
+                    reponse = m.search_text(message.replace("s ",message),utilisateur)
+                else:
+                    if message != "":
+                        try:
+                            m.insert_text(message,utilisateur)
+                            reponse = f"{message[:10]}... sauvé"
+                        except:
+                            reponse = f"{message[:10]}... n'a pas été sauvé"
+                    else:
+                        reponse = "message vide"
             else:
                 reponse = f"{utilisateur} inconnu"
  
@@ -61,7 +84,7 @@ class Signets(IObserver):
         reponse = self.f(msg,to,attachments)
         if reponse == None:
             reponse = "Une erreur s'est produite lors de l'interrogation du LLM"
-        await self.__observable.notify("Signet : "+reponse+" sauvé", to, attachments)
+        await self.__observable.notify(reponse, to, attachments)
 
     def prefix(self):
         return "!f"
