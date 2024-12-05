@@ -5,10 +5,19 @@ from .interfaces import IObserver, IObservable, IPlugin
 #from sqlite_handler import SQLiteHandler
 #from interrogationLocale import InterrogationLocale
 from signets import text_milvus_handler as tmh;
+from milvus_handler import milvus_handler as tmh
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+if logger.hasHandlers():
+    logger.handlers.clear()
 
+# Configurer le logging pour qu'il affiche sur stdout
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
     
 class Signets(IObserver):
     def __init__(self,observable:IObservable=None):
@@ -32,6 +41,13 @@ class Signets(IObserver):
         reponse = ""
         try:
             stime = time.time()
+            m = tmh.text_milvus_handler()
+            r = m.process_session_message(question,utilisateur,attachments)
+            if r :
+                reponse = "utilisateur OK"
+            else:
+                reponse = "utilisateur inconnu"
+ 
         except BaseException as e:
             print(f"Quelque chose n'a pas fonctionné {e}")
             reponse = None
