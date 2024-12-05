@@ -53,7 +53,7 @@ class Signets(IObserver):
         except BaseException as e:
             print(f"Quelque chose n'a pas fonctionné {e}")
             reponse = None
-        reponset = f"{time.time()-stime} {question}"
+        reponset = f"{time.time()-stime} {reponse}"
         return reponset
 
     async def notify(self,msg:str,to:str,attachments):
