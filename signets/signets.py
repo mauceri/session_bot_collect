@@ -5,8 +5,7 @@ from .interfaces import IObserver, IObservable, IPlugin
 #from sqlite_handler import SQLiteHandler
 #from interrogationLocale import InterrogationLocale
 from signets import text_milvus_handler as tmh;
-from milvus_handler import milvus_handler as tmh
-
+import signets.text_milvus_handler as mth
 
 logger = logging.getLogger()
 if logger.hasHandlers():
