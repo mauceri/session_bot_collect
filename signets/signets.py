@@ -34,6 +34,9 @@ class Signets(IObserver):
         db_path = os.path.join(self.data_dir, 'test_context.sqlite')
         
         logger.info(f"********************** Répertoire de données du plugin : {self.data_dir}")
+        self.m = tmh.text_milvus_handler()
+        self.m.disconnect()
+        self.m.connect(host="sanroque")
  
 
     def quoi_faire(self,message, utilisateur):
@@ -42,7 +45,7 @@ class Signets(IObserver):
         else:
             if message != "":
                 try:
-                    m.insert_text(message,utilisateur)
+                    self.m.insert_text(message,utilisateur)
                     return f"{message[:10]}... sauvé"
                 except:
                     return f"{message[:10]}... n'a pas été sauvé"
@@ -54,17 +57,14 @@ class Signets(IObserver):
         reponse = ""
         try:
             stime = time.time()
-            m = tmh.text_milvus_handler()
-            m.disconnect()
-            m.connect(host="sanroque")
             
-            if m.session_id_ok(utilisateur) :
+            if self.m.session_id_ok(utilisateur) :
                 if message.startswith("s "):
-                    reponse = m.search_text(message.replace("s ",message),utilisateur)
+                    reponse = self.m.search_text(message.replace("s ",message),utilisateur)
                 else:
                     if message != "":
                         try:
-                            m.insert_text(message,utilisateur)
+                            self.m.insert_text(message,utilisateur)
                             reponse = f"{message[:10]}... sauvé"
                         except:
                             reponse = f"{message[:10]}... n'a pas été sauvé"
