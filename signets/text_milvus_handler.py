@@ -1,18 +1,22 @@
 from towhee import ops, pipe, DataCollection
-
+import logging
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 import sys
 import uuid
 import numpy as np
 from pymilvus import utility
 
-class milvus_handler:
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
+class text_milvus_handler:
     def __init__(self,model_name='sentence-transformers/paraphrase-albert-small-v2'):
-        print(f"Aqui")
         self.model_name = model_name
+        self.text_embedding_collection_name = "text_embedding_collection"
 
     def connect(self,alias="default",host="localhost",port="19530",user="toto",password="toto"):
-        print(f"connection to Milvus server {user}")
+        logger.info(f"connection to Milvus server {user}")
         connections.connect(
             alias=alias,
             host=host,  # ou l'adresse IP du serveur Milvus
@@ -20,14 +24,16 @@ class milvus_handler:
         )
         
     def disconnect(self,alias="default",host="localhost",port="19530"):
-        print(f"disconnection from Milvus server")
+        logger.info(f"disconnection from Milvus server")
         connections.disconnect(alias)
     
     
-    def create_collection(self,collection_name, dim=768):
-        print(f"*************** dim = {dim}")
+    def create_text_collection(self,collection_name="text_collection", dim=768):
+        logger.info(f"*************** dim = {dim}")
         if utility.has_collection(collection_name):
-            Collection(collection_name).drop()
+            #Collection(collection_name).drop()
+            logger.info(f"La collection {collection_name} existe déjà")
+            return
         
         fields = [
             FieldSchema (name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -45,7 +51,7 @@ class milvus_handler:
         collection.create_index(field_name='embedding', index_params=index_params)
         return collection
 
-    def insert(self, text,dim=768,collection_name = 'text_embeddings_collection'):
+    def insert_text(self, text,dim=768,collection_name = 'text_collection'):
         # Pipeline Towhee pour créer des plongements
         embedding_pipeline = (
             pipe.input('text')
@@ -76,7 +82,7 @@ class milvus_handler:
         insert_result = collection.insert(entities)
         print(f"Texte inséré avec succès avec l'ID : {insert_result.primary_keys}")
 
-    def search(self,query,collection_name='text_embeddings_collection'):
+    def search_text(self,query,collection_name='text_collection'):
  
         # Charger la collection existante 
         if not utility.has_collection(collection_name):
@@ -105,7 +111,7 @@ class milvus_handler:
             anns_field="embedding",
             param=search_params,
             output_fields=["text"],
-            limit=3  # Limiter à 10 résultats pour l'exemple
+            limit=3  # Limiter à 3 résultats pour l'exemple
         )
         print(f"++++++++++++ {results}")
         # Filtrer les résultats basés sur le seuil

@@ -2,8 +2,8 @@ README.md
 setup.py
 signets/__init__.py
 signets/interfaces.py
-signets/milvus_handler.py
 signets/signets.py
+signets/text_milvus_handler.py
 signets.egg-info/PKG-INFO
 signets.egg-info/SOURCES.txt
 signets.egg-info/dependency_links.txt
