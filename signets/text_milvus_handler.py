@@ -29,7 +29,7 @@ class text_milvus_handler:
     
     
     def create_text_collection(self,collection_name="text_collection", dim=768):
-        logger.info(f"*************** dim = {dim}")
+        logger.info(f"*************** {collection_name} creation")
         if utility.has_collection(collection_name):
             #Collection(collection_name).drop()
             logger.info(f"La collection {collection_name} existe déjà")
@@ -37,8 +37,9 @@ class text_milvus_handler:
         
         fields = [
             FieldSchema (name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
-            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=1000),   
-            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=dim)
+            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=1000),  
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=dim),
+            FieldSchema(name='session_id', dtype=DataType.VARCHAR, max_length=1000)
         ]
         schema = CollectionSchema(fields=fields, description='Text embeddings collection')
         collection = Collection(name=collection_name, schema=schema)
@@ -51,7 +52,8 @@ class text_milvus_handler:
         collection.create_index(field_name='embedding', index_params=index_params)
         return collection
 
-    def insert_text(self, text,dim=768,collection_name = 'text_collection'):
+
+    def insert_text(self, text, session_id, collection_name = 'text_collection'):
         # Pipeline Towhee pour créer des plongements
         embedding_pipeline = (
             pipe.input('text')
@@ -61,7 +63,7 @@ class text_milvus_handler:
 
         # Calculer le plongement pour la chaîne de caractères
         result = embedding_pipeline(text).to_list()
-        print(f"************************ {len(result)}")
+        
         # Vérifier si un résultat a été produit
         if len(result) == 0:
             raise ValueError("Le pipeline n'a pas pu générer un plongement.")
@@ -75,15 +77,15 @@ class text_milvus_handler:
         # Créer les entités à insérer dans Milvus
         entities = [
             [text],        # Texte original
-            [embedding]    # Plongement
+            [embedding],    # Plongement
+            [session_id]
         ]
 
         # Insérer les entités dans Milvus
         insert_result = collection.insert(entities)
         print(f"Texte inséré avec succès avec l'ID : {insert_result.primary_keys}")
 
-    def search_text(self,query,collection_name='text_collection'):
- 
+    def search_text(self,query, session_id, collection_name='text_collection'):
         # Charger la collection existante 
         if not utility.has_collection(collection_name):
             raise ValueError(f"La collection '{collection_name}' n'existe pas.")
@@ -97,7 +99,6 @@ class text_milvus_handler:
                 .output('embedding')
         )
 
-        #print(f"*************** { embedding_pipeline(query).to_list()}")   
         # Calculer le plongement de la requête
         query_embedding = embedding_pipeline(query).to_list()[0][0]
 
@@ -106,25 +107,81 @@ class text_milvus_handler:
             "metric_type": "COSINE",
             "params": {"nprobe": 10}
         }
+
         results = collection.search(
             data=[query_embedding],
             anns_field="embedding",
             param=search_params,
             output_fields=["text"],
+            expr = f"session_id=='{session_id}'",
             limit=3  # Limiter à 3 résultats pour l'exemple
         )
-        print(f"++++++++++++ {results}")
-        # Filtrer les résultats basés sur le seuil
-        matching_results = []
-        for result in results:
-            print(f"result = {result}")
-            #if result.score >= threshold:
-            matching_results.append(result)
+        
+        return results
 
-        # Afficher les résultats
-        if matching_results:
-            print(f"Chaînes similaires trouvées pour la requête '{query}':")
-            for res in matching_results:
-                print(f"res: {res}")
+    def create_session_id_collection(self,collection_name="session_id_collection"):
+        logger.info(f"*************** création {collection_name}")
+        if utility.has_collection(collection_name):
+            #Collection(collection_name).drop()
+            logger.info(f"La collection {collection_name} existe déjà")
+            return
+        
+        fields = [
+            FieldSchema (name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name='session_id', dtype=DataType.VARCHAR, max_length=1000),
+            FieldSchema(name="ne_sert_pas", dtype=DataType.FLOAT_VECTOR, dim=2)
+        ]
+        schema = CollectionSchema(fields=fields, description='session_id_collection')
+        collection = Collection(name=collection_name, schema=schema)
+        # Créer un index sur le champ vectoriel bidon
+        index_params = {
+            "index_type": "FLAT",
+            "metric_type": "L2",
+            "params": {}
+        }
+        collection.create_index(field_name="ne_sert_pas", index_params=index_params)
+        return collection
+
+    def insert_session_id(self, session_id, collection_name = 'session_id_collection'):
+        collection = Collection(collection_name)
+        dummy = [1,2]
+        # Créer les entités à insérer dans Milvus
+        entities = [
+            [session_id],
+            [dummy]
+        ]
+
+        # Insérer les entités dans Milvus
+        insert_result = collection.insert(entities)
+        logger.info(f"Session_id inséré avec succès avec l'ID : {insert_result.primary_keys}")
+    
+
+    def session_id_ok(self,session_id, collection_name='session_id_collection'):
+        # Charger la collection existante 
+        if not utility.has_collection(collection_name):
+            raise ValueError(f"La collection '{collection_name}' n'existe pas.")
+
+        collection = Collection(name=collection_name)
+        collection.load()
+        # Créer un pipeline Towhee pour générer le plongement de la requête
+
+        results = collection.query(
+            expr = f"session_id=='{session_id}'",
+            output_fields=["id"],
+        )
+        return len(results) > 0
+
+    def drop_collection_if_exists(self,name):
+        if name in utility.list_collections():
+            utility.drop_collection(name)
+            logger.info(f"{name} dropped")
         else:
-            print(f"Aucune chaîne n'a dépassé le seuil.")
+            logger.info(f"{name} does not exist")
+    
+    def process_session_message(self,message,utilisateur,attachments):
+        if self.session_id_ok(utilisateur):
+            logger.info(f"{utilisateur} ok")
+            return True
+        else:
+            logger.info(f"{utilisateur} inconnu")
+            return  False
