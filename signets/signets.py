@@ -64,6 +64,7 @@ class Signets(IObserver):
                 else:
                     if message != "":
                         try:
+                            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Trying to insert {message}")
                             self.m.insert_text(message,utilisateur)
                             reponse = f"{message[:10]}... sauvé"
                         except:
