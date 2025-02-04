@@ -37,22 +37,29 @@ class Collect(IObserver):
 
     def _extract_metadata(self, message: str):
         """
-        Extrait les expressions-clés (mots entre #...#) et l'URL à la fin du message.
-        Retourne un dictionnaire contenant les éléments extraits.
+        Extrait les expressions-clés (début de la première ligne) et l'URL à la fin du message.
+        Retourne un dictionnaire contenant les éléments extraits et le message nettoyé.
         """
         metadata = {"expressions_clefs": [], "url": None}
 
-        # Extraction des expressions-clés (première ligne contenant #...#)
+        # Séparer la première ligne du reste du message
         first_line, _, remaining_text = message.partition("\n")
-        metadata["expressions_clefs"] = re.findall(r"#(.*?)#", first_line)
 
-        # Extraction d'une URL si présente en fin de message
-        url_match = re.search(r"(https?://[^\s]+)$", remaining_text.strip(), re.MULTILINE)
+        # Extraction des expressions-clés **uniquement au début**
+        match = re.match(r"^(#.*?#)+\s*", first_line)
+        if match:
+            expressions_brutes = match.group(0)  # Les expressions trouvées
+            metadata["expressions_clefs"] = re.findall(r"#(.*?)#", expressions_brutes)
+            first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions de la première ligne
+
+        # Reconstruction du message propre
+        cleaned_message = (first_line.strip() + "\n" + remaining_text.strip()).strip()
+
+        # Extraction d'une URL si elle est à la fin du message
+        url_match = re.search(r"(https?://[^\s]+)$", cleaned_message, re.MULTILINE)
         if url_match:
             metadata["url"] = url_match.group(1)
-
-        # Nettoyage du message en enlevant la ligne des expressions-clés
-        cleaned_message = remaining_text.strip()
+            cleaned_message = cleaned_message.replace(metadata["url"], "").strip()  # Retirer l'URL du texte
 
         return metadata, cleaned_message
 
