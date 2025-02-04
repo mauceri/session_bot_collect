@@ -35,10 +35,43 @@ class Collect(IObserver):
         """Retourne le chemin du fichier utilisateur dans data/"""
         return os.path.join(self.data_dir, f"{utilisateur}.yaml")
 
+    def _extract_metadata(self, message: str):
+        """
+        Extrait les expressions-clés (mots entre #...#) et l'URL à la fin du message.
+        Retourne un dictionnaire contenant les éléments extraits.
+        """
+        metadata = {"expressions_clefs": [], "url": None}
+
+        # Extraction des expressions-clés (première ligne contenant #...#)
+        first_line, _, remaining_text = message.partition("\n")
+        metadata["expressions_clefs"] = re.findall(r"#(.*?)#", first_line)
+
+        # Extraction d'une URL si présente en fin de message
+        url_match = re.search(r"(https?://[^\s]+)$", remaining_text.strip(), re.MULTILINE)
+        if url_match:
+            metadata["url"] = url_match.group(1)
+
+        # Nettoyage du message en enlevant la ligne des expressions-clés
+        cleaned_message = remaining_text.strip()
+
+        return metadata, cleaned_message
+
     def _append_to_file(self, filepath: str, message: str):
-        """Ajoute un message à un fichier YAML"""
+        """Ajoute un message structuré à un fichier YAML"""
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        entry = {"date": timestamp, "message": message}
+
+        # Extraction des métadonnées
+        metadata, cleaned_message = self._extract_metadata(message)
+
+        # Création de l'entrée
+        entry = {
+            "date": timestamp,
+            "expressions_clefs": metadata["expressions_clefs"],
+            "message": cleaned_message
+        }
+
+        if metadata["url"]:
+            entry["url"] = metadata["url"]
 
         # Charger l'ancien contenu (si fichier existe)
         if os.path.exists(filepath):
@@ -50,7 +83,7 @@ class Collect(IObserver):
         else:
             data = []
 
-        # Ajouter le nouveau message
+        # Ajouter la nouvelle entrée
         data.append(entry)
 
         # Sauvegarder dans le fichier YAML
