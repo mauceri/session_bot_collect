@@ -24,7 +24,7 @@ long_description = read_file(("README.md",))
 
 
 setup(
-    name="signets",
+    name="collect",
     version='0.2.0',
     description="Un robot qui vous veut du bien",
     packages=find_packages(),
