@@ -16,7 +16,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-class Signets(IObserver):
+class Collect(IObserver):
     def __init__(self, observable: IObservable = None):
         self.__observable = observable
 
@@ -110,12 +110,12 @@ class Signets(IObserver):
 class Plugin(IPlugin):
     def __init__(self, observable: IObservable):
         self.__observable = observable
-        self.signets = Signets(self.__observable)
-        logger.info(f"********************** Observateur créé {self.signets.prefix()}")
+        self.collect = Collect(self.__observable)
+        logger.info(f"********************** Observateur créé {self.collect.prefix()}")
 
     def start(self):
-        logger.info(f"********************** Inscription de {self.signets.prefix()}")
-        self.__observable.subscribe(self.signets)
+        logger.info(f"********************** Inscription de {self.collect.prefix()}")
+        self.__observable.subscribe(self.collect)
 
     async def stop(self):
-        self.__observable.unsubscribe(self.signets)
+        self.__observable.unsubscribe(self.collect)
