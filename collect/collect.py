@@ -4,6 +4,7 @@ import sys
 import time
 import yaml
 import re
+import shutil
 from .interfaces import IObserver, IObservable, IPlugin
 
 logger = logging.getLogger()
@@ -17,6 +18,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 class Collect(IObserver):
+    CATEGORIES_CONNUES = {"soulignement", "note de lecture", "texte", "page web"}  # Ajoutez d'autres catégories ici
+
     def __init__(self, observable: IObservable = None):
         self.__observable = observable
 
@@ -26,10 +29,15 @@ class Collect(IObserver):
         # Chemin du répertoire 'data'
         self.data_dir = os.path.join(plugin_dir, 'data')
 
-        # Créer le répertoire de données s'il n'existe pas
+        # Répertoire pour stocker les fichiers attachés
+        self.attachments_dir = os.path.join(self.data_dir, "attachments")
+
+        # Créer les répertoires s'ils n'existent pas
         os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(self.attachments_dir, exist_ok=True)
 
         logger.info(f"********************** Répertoire de données du plugin : {self.data_dir}")
+        logger.info(f"********************** Répertoire des fichiers attachés : {self.attachments_dir}")
 
     def _get_user_file(self, utilisateur: str) -> str:
         """Retourne le chemin du fichier utilisateur dans data/"""
@@ -37,21 +45,27 @@ class Collect(IObserver):
 
     def _extract_metadata(self, message: str):
         """
-        Extrait les expressions-clés (début de la première ligne) et l'URL à la fin du message.
+        Extrait les expressions-clés (#...#), les catégories ($...$) et l'URL à la fin du message.
         Retourne un dictionnaire contenant les éléments extraits et le message nettoyé.
         """
-        metadata = {"expressions_clefs": [], "url": None}
+        metadata = {"expressions_clefs": [], "categorie": None, "url": None}
 
         # Séparer la première ligne du reste du message
         first_line, _, remaining_text = message.partition("\n")
 
         # Extraction des expressions-clés **uniquement au début**
-        first_line += " "
-        match = re.match(r"^((#.*?#)\s)*", first_line)
-        if match:
-            expressions_brutes = match.group(0)  # Les expressions trouvées
+        match_expr = re.match(r"^((#.*?#)\s)*", first_line)
+        if match_expr:
+            expressions_brutes = match_expr.group(0)  # Les expressions trouvées
             metadata["expressions_clefs"] = re.findall(r"#(.*?)#", expressions_brutes)
-            first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions de la première ligne
+            first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions-clés de la première ligne
+
+        # Extraction des catégories (étiquettes $...$)
+        categories_trouvees = re.findall(r"\$(.*?)\$", first_line)
+        for categorie in categories_trouvees:
+            if categorie.lower() in self.CATEGORIES_CONNUES:
+                metadata["categorie"] = categorie.lower()  # Prend la première catégorie trouvée
+                first_line = first_line.replace(f"${categorie}$", "").strip()  # Supprime la catégorie du message
 
         # Reconstruction du message propre
         cleaned_message = (first_line.strip() + "\n" + remaining_text.strip()).strip()
@@ -64,18 +78,45 @@ class Collect(IObserver):
 
         return metadata, cleaned_message
 
-    def _append_to_file(self, filepath: str, message: str):
+    def _save_attachments(self, utilisateur: str, attachments):
+        """
+        Sauvegarde les fichiers attachés dans le répertoire 'attachments/utilisateur'.
+        Retourne la liste des fichiers enregistrés.
+        """
+        saved_files = []
+        user_attachment_dir = os.path.join(self.attachments_dir, utilisateur)
+        os.makedirs(user_attachment_dir, exist_ok=True)
+
+        for attachment in attachments:
+            filename = os.path.basename(attachment)  # Récupérer le nom du fichier
+            filepath = os.path.join(user_attachment_dir, filename)
+
+            try:
+                shutil.copy(attachment, filepath)  # Copier le fichier dans le dossier utilisateur
+                saved_files.append(filepath)
+                logger.info(f"Fichier enregistré : {filepath}")
+            except Exception as e:
+                logger.error(f"Échec de l'enregistrement du fichier {filename} : {e}")
+
+        return saved_files
+
+    def _append_to_file(self, filepath: str, message: str, attachments):
         """Ajoute un message structuré à un fichier YAML"""
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
         # Extraction des métadonnées
         metadata, cleaned_message = self._extract_metadata(message)
 
+        # Sauvegarde des fichiers attachés
+        saved_files = self._save_attachments(os.path.basename(filepath).replace(".yaml", ""), attachments)
+
         # Création de l'entrée
         entry = {
             "date": timestamp,
             "expressions_clefs": metadata["expressions_clefs"],
-            "message": cleaned_message
+            "categorie": metadata["categorie"],
+            "message": cleaned_message,
+            "attachments": saved_files if saved_files else None
         }
 
         if metadata["url"]:
@@ -98,25 +139,6 @@ class Collect(IObserver):
         with open(filepath, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, allow_unicode=True)
 
-    def _search_in_file(self, filepath: str, search_term: str):
-        """Recherche les messages contenant le terme donné"""
-        if not os.path.exists(filepath):
-            return "Aucune note enregistrée."
-
-        with open(filepath, "r", encoding="utf-8") as f:
-            try:
-                data = yaml.safe_load(f) or []
-            except yaml.YAMLError:
-                return "Erreur de lecture du fichier."
-
-        # Filtrer les messages contenant le terme recherché (insensible à la casse)
-        results = [entry["message"] for entry in data if re.search(search_term, entry["message"], re.IGNORECASE)]
-
-        if results:
-            return f"Résultats de recherche ({len(results)} trouvés) :\n" + "\n".join(results[:5])  # Limite à 5 résultats
-        else:
-            return "Aucun résultat trouvé."
-
     def f(self, message: str, utilisateur: str, attachments):
         logger.info(f"Message de {utilisateur} : {message}")
 
@@ -133,7 +155,7 @@ class Collect(IObserver):
                 return self._search_in_file(user_file, search_term)
 
             else:  # Ajout du message
-                self._append_to_file(user_file, message)
+                self._append_to_file(user_file, message, attachments)
                 return f"'{message[:10]}...' ajouté avec succès."
 
         except Exception as e:
