@@ -89,16 +89,17 @@ class Collect(IObserver):
         os.makedirs(user_attachment_dir, exist_ok=True)
 
         for attachment in attachments:
-            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {attachment['name']}")
             filename = os.path.basename(attachment['name'])  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
 
             try:
-                shutil.copy(attachment, filepath)  # Copier le fichier dans le dossier utilisateur
+                with open(filepath, 'wb') as f:
+                    f.write(attachment['data'])  # Écriture des données binaires
                 saved_files.append(filepath)
                 logger.info(f"Fichier enregistré : {filepath}")
             except Exception as e:
                 logger.error(f"Échec de l'enregistrement du fichier {filename} : {e}")
+
 
         return saved_files
 
