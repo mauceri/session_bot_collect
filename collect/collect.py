@@ -92,6 +92,7 @@ class Collect(IObserver):
         for attachment in attachments:
             filename = os.path.basename(attachment['name'])  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
+            saved_files.append(filepath)
             try:
                 if not attachment.get('content'):
                     logger.error(f"Les données du fichier {filename} sont vides ou absentes.")
