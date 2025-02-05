@@ -87,9 +87,11 @@ class Collect(IObserver):
         logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ _save_attachments")
         saved_files = []
         user_attachment_dir = os.path.join(self.attachments_dir, utilisateur)
+        logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {user_attachment_dir}")
         os.makedirs(user_attachment_dir, exist_ok=True)
 
         for attachment in attachments:
+            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {os.path.basename(attachment)}")
             filename = os.path.basename(attachment)  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
 
