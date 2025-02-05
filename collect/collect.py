@@ -46,7 +46,7 @@ class Collect(IObserver):
         first_line, _, remaining_text = message.partition("\n")
 
         # Extraction des expressions-clés **uniquement au début**
-        match = re.match(r"^(#.*?#)+\s*", first_line)
+        match = re.match(r"^((#.*?#)\s)*", first_line)
         if match:
             expressions_brutes = match.group(0)  # Les expressions trouvées
             metadata["expressions_clefs"] = re.findall(r"#(.*?)#", expressions_brutes)
