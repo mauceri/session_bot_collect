@@ -91,7 +91,7 @@ class Collect(IObserver):
         for attachment in attachments:
             filename = os.path.basename(attachment['name'])  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
-            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   attachment : {attachment}")
+            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   attachment : {attachment['content']}")
 
             try:
                 with open(filepath, 'wb') as f:
