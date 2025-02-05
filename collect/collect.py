@@ -61,11 +61,11 @@ class Collect(IObserver):
             first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions-clés de la première ligne
 
         # Extraction des catégories (étiquettes $...$)
-        categories_trouvees = re.findall(r"\$(.*?)\$", first_line)
-        for categorie in categories_trouvees:
-            if categorie.lower() in self.CATEGORIES_CONNUES:
-                metadata["categorie"] = categorie.lower()  # Prend la première catégorie trouvée
-                first_line = first_line.replace(f"${categorie}$", "").strip()  # Supprime la catégorie du message
+        match_expr = re.match(r"^((\$.*?\$)\s)*", first_line)
+        if match_expr:
+            expressions_brutes = match_expr.group(0)  # Les expressions trouvées
+            metadata["categorie"] = re.findall(r"\$(.*?)\$", expressions_brutes)
+            first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions-clés de la première ligne
 
         # Reconstruction du message propre
         cleaned_message = (first_line.strip() + "\n" + remaining_text.strip()).strip()
