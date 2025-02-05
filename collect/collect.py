@@ -95,7 +95,7 @@ class Collect(IObserver):
 
             try:
                 with open(filepath, 'wb') as f:
-                    f.write(attachment['data'])  # Écriture des données binaires
+                    f.write(attachment['content'])  # Écriture des données binaires
                 saved_files.append(filepath)
                 logger.info(f"Fichier enregistré : {filepath}")
             except Exception as e:
