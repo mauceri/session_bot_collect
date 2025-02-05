@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import yaml
+import base64
 import re
 import shutil
 from .interfaces import IObserver, IObservable, IPlugin
@@ -91,13 +92,21 @@ class Collect(IObserver):
         for attachment in attachments:
             filename = os.path.basename(attachment['name'])  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
-            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   attachment : {attachment['content']}")
-
             try:
+                if not attachment.get('content'):
+                    logger.error(f"Les données du fichier {filename} sont vides ou absentes.")
+                    continue
+
+                # Décoder les données base64
+                try:
+                    data = base64.b64decode(attachment['content'])
+                except Exception as e:
+                    logger.error(f"Erreur de décodage base64 pour {filename} : {e}")
+                    continue
+
+                # Écriture dans le fichier
                 with open(filepath, 'wb') as f:
-                    f.write(attachment['content'])  # Écriture des données binaires
-                saved_files.append(filepath)
-                logger.info(f"Fichier enregistré : {filepath}")
+                    f.write(data)
             except Exception as e:
                 logger.error(f"Échec de l'enregistrement du fichier {filename} : {e}")
 
