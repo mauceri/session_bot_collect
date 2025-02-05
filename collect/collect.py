@@ -84,14 +84,12 @@ class Collect(IObserver):
         Sauvegarde les fichiers attachés dans le répertoire 'attachments/utilisateur'.
         Retourne la liste des fichiers enregistrés.
         """
-        logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ _save_attachments")
         saved_files = []
         user_attachment_dir = os.path.join(self.attachments_dir, utilisateur)
-        logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {user_attachment_dir}")
         os.makedirs(user_attachment_dir, exist_ok=True)
 
         for attachment in attachments:
-            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {attachment}")
+            logger.info(f"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ {attachment['name']}")
             filename = os.path.basename(attachment)  # Récupérer le nom du fichier
             filepath = os.path.join(user_attachment_dir, filename)
 
