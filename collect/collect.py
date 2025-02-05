@@ -53,6 +53,7 @@ class Collect(IObserver):
         # Séparer la première ligne du reste du message
         first_line, _, remaining_text = message.partition("\n")
 
+        first_line += " "
         # Extraction des expressions-clés **uniquement au début**
         match_expr = re.match(r"^((#.*?#)\s)*", first_line)
         if match_expr:
