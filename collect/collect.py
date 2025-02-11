@@ -71,7 +71,7 @@ class Collect(IObserver):
             metadata["categorie"] = re.findall(r"\$(.*?)\$", expressions_brutes)
             cleaned_message = cleaned_message[len(expressions_brutes):]  # Supprimer les expressions-clés de la première ligne
         # Reconstruction du message propre
-        cleaned_message = (first_line.strip() + "\n" + remaining_text.strip()).strip()
+        cleaned_message = (cleaned_message.strip() + "\n" + remaining_text.strip()).strip()
 
         # Extraction d'une URL si elle est à la fin du message
         url_match = re.search(r"(https?://[^\s]+)$", cleaned_message, re.MULTILINE)
