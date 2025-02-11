@@ -153,6 +153,7 @@ class Collect(IObserver):
         # Sauvegarder dans le fichier YAML
         with open(filepath, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, allow_unicode=True)
+        return cleaned_message
 
     def f(self, message: str, utilisateur: str, attachments):
         logger.info(f"Message de {utilisateur} : {message}")
@@ -170,7 +171,7 @@ class Collect(IObserver):
                 return self._search_in_file(user_file, search_term)
 
             else:  # Ajout du message
-                self._append_to_file(user_file, message, attachments)
+                message = self._append_to_file(user_file, message, attachments)
                 return f"'{message[:10]}...' ajouté avec succès."
 
         except Exception as e:
