@@ -59,9 +59,8 @@ class Collect(IObserver):
         match_expr = re.match(r"\s*((#.*?#)\s)*", first_line)
         if match_expr:
             expressions_brutes = match_expr.group(0)  # Les expressions trouvées
-            metadata["expressions_clefs"] = re.findall(r"\s*#(.*?)#", expressions_brutes)
+            metadata["expressions_clefs"] = re.findall(r"#(.*?)#", expressions_brutes)
             logger.info(f"++++++++++++++++++++++++++++++++++++++++++++++++++++++ {expressions_brutes}")
-            logger.info(f"++++++++++++++++++++++++++++++++++++++++++++++++++++++ {metadata["expressions_clefs"]}")
             first_line = first_line[len(expressions_brutes):]  # Supprimer les expressions-clés de la première ligne
         # Reconstruction du message propre
         cleaned_message = (first_line.strip() + "\n" + remaining_text.strip()).strip()
