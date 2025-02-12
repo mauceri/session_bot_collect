@@ -51,6 +51,7 @@ class Collect(IObserver):
         """
         metadata = {"expressions_clefs": [], "categorie": None, "url": None}
 
+        logger.info(f"++++++++++++++++++++++++++++++++++++++++++++++++++++++ {message[0:100]}")
         # Séparer la première ligne du reste du message
         first_line, _, remaining_text = message.partition("\n")
 
