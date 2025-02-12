@@ -57,6 +57,8 @@ class Collect(IObserver):
         first_line += " "
         # Extraction des expressions-clés **uniquement au début**
         match_expr = re.match(r"\s*((#.*?#)\s)*", first_line)
+        logger.info(f"++++++++++++++++++++++++++++++++++++++++++++++++++++++ {first_line}")
+        logger.info(f"++++++++++++++++++++++++++++++++++++++++++++++++++++++ {match_expr}")
         if match_expr:
             expressions_brutes = match_expr.group(0)  # Les expressions trouvées
             metadata["expressions_clefs"] = re.findall(r"#(.*?)#", expressions_brutes)
